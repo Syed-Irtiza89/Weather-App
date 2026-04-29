@@ -5,15 +5,47 @@ import WeatherCard from "../components/WeatherCard";
 import { getWeather } from "../services/weatherApi";
 import { getTheme } from "../utils/theme";
 
+import { LinearGradient } from "expo-linear-gradient";
+import WeatherAnimation from "../components/WeatherAnimation";
+import FlashOverlay from "../components/FlashOverlay";
+import RainEffect from "../components/RainEffect";
+
 export default function HomeScreen() {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [flashActive, setFlashActive] = useState(false);
+
+  // Trigger lightning flashes periodically if it's a storm
+  React.useEffect(() => {
+    let interval;
+    if (getType() === "storm") {
+      interval = setInterval(() => {
+        setFlashActive(true);
+        setTimeout(() => setFlashActive(false), 300);
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [weather]);
 
   const handleSearch = async (city) => {
     setLoading(true);
     const data = await getWeather(city);
     setWeather(data);
     setLoading(false);
+  };
+
+  const getType = () => {
+    if (!weather) return "cloud";
+
+    const t = weather.weather[0].main.toLowerCase();
+
+    if (t.includes("rain")) return "rain";
+    if (t.includes("snow")) return "snow";
+    if (t.includes("storm")) return "storm";
+    if (t.includes("cloud")) return "cloud";
+    if (t.includes("clear")) return "clear";
+
+    return "cloud";
   };
 
   const vibeMessage = () => {
@@ -30,8 +62,14 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: getTheme(weather)[0] }]}>
-      
+    <LinearGradient
+      colors={getTheme(weather)}
+      style={styles.container}
+    >
+      {/* BACKGROUND ANIMATION */}
+      <WeatherAnimation type={getType()} />
+      <FlashOverlay active={flashActive} />
+      <RainEffect active={getType() === "rain" || getType() === "storm"} />
       {/* HEADER */}
       <Text style={styles.logo}>🌍 Weather Vibe</Text>
 
@@ -65,52 +103,68 @@ export default function HomeScreen() {
         </TouchableOpacity>
       )}
 
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 70,
+    paddingTop: 80,
     alignItems: "center",
   },
 
   logo: {
-    fontSize: 32,
-    fontWeight: "bold",
+    fontSize: 40,
+    fontWeight: "900",
     color: "#fff",
+    letterSpacing: -1,
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 10,
   },
 
   subtitle: {
-    fontSize: 14,
-    color: "#eee",
-    marginBottom: 20,
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.8)",
+    marginBottom: 30,
+    fontWeight: "500",
   },
 
   vibe: {
-    marginTop: 20,
-    fontSize: 16,
+    marginTop: 25,
+    fontSize: 18,
     color: "#fff",
     fontStyle: "italic",
     textAlign: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
+    lineHeight: 26,
+    opacity: 0.9,
   },
 
   loading: {
-    marginTop: 10,
+    marginTop: 20,
     color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 
   refreshBtn: {
-    marginTop: 25,
-    padding: 12,
-    backgroundColor: "#000",
-    borderRadius: 20,
+    marginTop: 30,
+    marginBottom: 40,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   refreshText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 16,
   },
 });

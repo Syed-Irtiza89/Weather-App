@@ -14,9 +14,9 @@ const SearchBar = ({ onSearch, theme }) => {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.searchBox, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+      <View style={styles.searchBox}>
         <TextInput
-          style={[styles.input, { color: '#fff' }]}
+          style={styles.input}
           placeholder="Search for a city..."
           placeholderTextColor="#ddd"
           value={city}
@@ -34,23 +34,26 @@ const SearchBar = ({ onSearch, theme }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
-    marginTop: 50,
-    marginBottom: 20,
+    paddingHorizontal: 30,
+    marginTop: 10,
+    marginBottom: 10,
+    width: "100%",
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    height: 50,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 30,
+    paddingHorizontal: 20,
+    height: 55,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   input: {
     flex: 1,
     fontSize: 18,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#fff',
   },
   iconContainer: {
     padding: 5,

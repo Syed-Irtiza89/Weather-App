@@ -1,14 +1,29 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+import WeatherAnimation from "./WeatherAnimation";
 
 export default function WeatherCard({ weather }) {
   if (!weather) return null;
 
   const icon = weather.weather[0].main.toLowerCase();
 
+  const getAnimType = (type) => {
+    if (type.includes("rain")) return "rain";
+    if (type.includes("snow")) return "snow";
+    if (type.includes("storm") || type.includes("thunder")) return "storm";
+    if (type.includes("cloud")) return "cloud";
+    return "clear";
+  };
+
   return (
     <View style={styles.card}>
       
+      {/* ANIMATION */}
+      <WeatherAnimation 
+        type={getAnimType(icon)} 
+        style={styles.animation}
+      />
+
       {/* CITY */}
       <Text style={styles.city}>
         📍 {weather.name}
@@ -65,6 +80,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 15,
     elevation: 10,
+  },
+
+  animation: {
+    width: 200,
+    height: 200,
+    position: "relative",
+    opacity: 1,
   },
 
   city: {
