@@ -1,19 +1,37 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import SearchBar from "../components/SearchBar";
 import WeatherCard from "../components/WeatherCard";
 import { getWeather } from "../services/weatherApi";
 import { getTheme } from "../utils/theme";
+import { saveCity } from "../services/firestoreService";
+import { logOut } from "../services/authService";
 
 import { LinearGradient } from "expo-linear-gradient";
 import WeatherAnimation from "../components/WeatherAnimation";
 import FlashOverlay from "../components/FlashOverlay";
 import RainEffect from "../components/RainEffect";
 
-export default function HomeScreen() {
+export default function HomeScreen({ user }) {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [flashActive, setFlashActive] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSaveCity = async () => {
+    if (!weather || !user) return;
+    const result = await saveCity(user.uid, weather);
+    if (!result.error) {
+      setSaved(true);
+      Alert.alert("✅ Saved!", `${weather.name} added to your worlds.`);
+    } else {
+      Alert.alert("Error", result.error);
+    }
+  };
+
+  const handleLogOut = async () => {
+    await logOut();
+  };
 
   // Trigger lightning flashes periodically if it's a storm
   React.useEffect(() => {
@@ -71,7 +89,12 @@ export default function HomeScreen() {
       <FlashOverlay active={flashActive} />
       <RainEffect active={getType() === "rain" || getType() === "storm"} />
       {/* HEADER */}
-      <Text style={styles.logo}>🌍 Weather Vibe</Text>
+      <View style={styles.header}>
+        <Text style={styles.logo}>🌍 Weather Vibe</Text>
+        <TouchableOpacity onPress={handleLogOut} style={styles.logoutBtn}>
+          <Text style={styles.logoutText}>Sign Out</Text>
+        </TouchableOpacity>
+      </View>
 
       <Text style={styles.subtitle}>
         Experience weather, not just see it
@@ -93,14 +116,23 @@ export default function HomeScreen() {
       {/* WEATHER CARD */}
       {weather && <WeatherCard weather={weather} />}
 
-      {/* REFRESH BUTTON */}
+      {/* ACTION BUTTONS */}
       {weather && (
-        <TouchableOpacity
-          style={styles.refreshBtn}
-          onPress={() => handleSearch(weather.name)}
-        >
-          <Text style={styles.refreshText}>↻ Refresh Weather</Text>
-        </TouchableOpacity>
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={styles.saveBtn}
+            onPress={handleSaveCity}
+          >
+            <Text style={styles.btnText}>{saved ? "★ Saved" : "☆ Save City"}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={() => { setSaved(false); handleSearch(weather.name); }}
+          >
+            <Text style={styles.btnText}>↻ Refresh</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
     </LinearGradient>
@@ -149,22 +181,58 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  refreshBtn: {
-    marginTop: 30,
+  header: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 25,
+    marginBottom: 4,
+  },
+
+  logoutBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+
+  logoutText: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  actions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 20,
     marginBottom: 40,
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+  },
+
+  saveBtn: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    backgroundColor: "rgba(67, 97, 238, 0.6)",
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: "rgba(67, 97, 238, 0.8)",
+  },
+
+  refreshBtn: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     borderRadius: 30,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.3)",
-    flexDirection: "row",
-    alignItems: "center",
   },
 
-  refreshText: {
+  btnText: {
     color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
+    fontWeight: "700",
+    fontSize: 15,
   },
 });
